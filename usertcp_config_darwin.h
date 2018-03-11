@@ -1,0 +1,9 @@
+#define PROGNAME "usertcp"
+#define MAX_BACKLOG 5
+#define MAX_CLIENTS 5
+#define MIN_CLIENT_UID 500
+#define MAX_CLIENT_UID 65533
+#define UNPRIVILEGED_UID 4294967294
+#define UNPRIVILEGED_GID 4294967294
+#define UNPRIVILEGED_DIR "/var/empty"
+#define CLIENT_PATH "/bin:/usr/bin"
