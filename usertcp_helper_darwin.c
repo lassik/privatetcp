@@ -44,9 +44,6 @@ find_uid(unsigned int sport, unsigned int cport)
 			return 0;
 		}
 		xt = (struct xtcpcb *)xig;
-		if (xt->xt_socket.xso_protocol != IPPROTO_TCP) {
-			continue;
-		}
 		if (xt->xt_inp.inp_gencnt > xigs->xig_gen) {
 			continue;
 		}
