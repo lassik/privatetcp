@@ -110,6 +110,12 @@ main(int argc, char *argv[])
 		sig_unblock(SIGCHLD);
 		sig_catch(SIGTERM, SIG_DFL);
 		sig_catch(SIGPIPE, SIG_DFL);
+		if (setregid(NOBODY_GID, NOBODY_GID) == -1) {
+			diesys("helper: cannot change to unprivileged group");
+		}
+		if (setreuid(NOBODY_UID, NOBODY_UID) == -1) {
+			diesys("helper: cannot change to unprivileged user");
+		}
 		usertcp_helper(sport);
 		_exit(126);
 	}

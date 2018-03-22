@@ -17,12 +17,6 @@ usertcp_helper(unsigned int sport)
 	struct passwd *pw;
 	ssize_t nbyte;
 
-	if (setregid(NOBODY_GID, NOBODY_GID) == -1) {
-		diesys("helper: cannot change to unprivileged group");
-	}
-	if (setreuid(NOBODY_UID, NOBODY_UID) == -1) {
-		diesys("helper: cannot change to unprivileged user");
-	}
 	for (;;) {
 		do {
 			nbyte = read(0, &client, sizeof(client));
