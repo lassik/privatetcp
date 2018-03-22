@@ -13,6 +13,7 @@ cp -p ../usertcp_config_"$uname".h usertcp_config.h
 $CC $CFLAGS -I . -o usertcp \
     ../usertcp_server.c \
     ../usertcp_client.c \
+    ../usertcp_nobody.c \
     ../usertcp_nobody_"$uname".c \
     ../usertcp_util.c \
     ../sig.c
