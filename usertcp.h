@@ -19,4 +19,5 @@ void usertcp_client(unsigned int sport, unsigned int cport,
 void usertcp_nobody_helper(unsigned int sport);
 void usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client);
 
+void usertcp_root_helper_init(void);
 void usertcp_root_server_client(unsigned int sport, struct usertcp_client *client);

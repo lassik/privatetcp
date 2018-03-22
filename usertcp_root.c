@@ -129,6 +129,7 @@ main(int argc, char *argv[])
 		sig_unblock(SIGCHLD);
 		sig_catch(SIGTERM, SIG_DFL);
 		sig_catch(SIGPIPE, SIG_DFL);
+		usertcp_root_helper_init();
 		if (setregid(NOBODY_GID, NOBODY_GID) == -1) {
 			diesys("helper: cannot change to unprivileged group");
 		}
