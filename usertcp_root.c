@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <signal.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
@@ -39,6 +40,26 @@ sigchld(void)
 	}
 }
 
+static unsigned int
+parse_tcp_port(const char *str)
+{
+	struct servent *s;
+	int port, count, len;
+
+	count = sscanf(str, "%d%n", &port, &len);
+	if ((count != 1) || ((size_t)len != strlen(str))) {
+		if (!(s = getservbyname(str, "tcp"))) {
+			die("TCP port number not found for that service");
+		}
+		port = ntohs(s->s_port);
+		endservent();
+	}
+	if ((port < 1) || (port > 65535)) {
+		die("invalid TCP port number");
+	}
+	return port;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -46,7 +67,6 @@ main(int argc, char *argv[])
 	static struct timespec tv;
 	static struct sockaddr_in saddr;
 	static struct sockaddr_in caddr;
-	static struct servent *sserv;
 	uint64_t ctime;
 	ssize_t nbyte;
 	uid_t cuid;
@@ -65,11 +85,7 @@ main(int argc, char *argv[])
 	if (argc < 3) {
 		usage("port command [arg ...]");
 	}
-	if (!(sserv = getservbyname(argv[1], "tcp"))) {
-		die("TCP port not found");
-	}
-	sport = ntohs(sserv->s_port);
-	endservent();
+	sport = parse_tcp_port(argv[1]);
 	sig_block(SIGCHLD);
 	sig_catch(SIGCHLD, sigchld);
 	sig_catch(SIGTERM, sigterm);
