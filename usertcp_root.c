@@ -90,7 +90,7 @@ main(int argc, char *argv[])
 	saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	saddr.sin_port = htons(sport);
 	if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-		diesys("cannot create TCP server (socket())");
+		diesys("cannot create TCP server (bind())");
 	}
 	if ((pipe(tohelper) == -1) || (pipe(fromhelper) == -1)) {
 		diesys("cannot create pipe");
