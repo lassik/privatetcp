@@ -153,6 +153,7 @@ main(int argc, char *argv[])
 		memset(&client, 0, sizeof(client));
 		client.time = ctime;
 		client.port = cport;
+                usertcp_root_server_client(sport, &client);
 		do {
 			nbyte = write(tohelper[1], &client, sizeof(client));
 		} while ((nbyte == -1) && (errno == EINTR));

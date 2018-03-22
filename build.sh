@@ -15,5 +15,6 @@ $CC $CFLAGS -I . -o usertcp \
     ../usertcp_nobody.c \
     ../usertcp_nobody_"$uname".c \
     ../usertcp_root.c \
+    ../usertcp_root_"$uname".c \
     ../usertcp_util.c \
     ../sig.c
