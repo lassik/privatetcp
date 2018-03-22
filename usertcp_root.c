@@ -79,6 +79,9 @@ main(int argc, char *argv[])
 	pid_t cchild;
 	socklen_t clen;
 
+	if (geteuid()) {
+		die("must be started as root");
+	}
 	if (chdir(NOBODY_DIR) == -1) {
 		diesys("cannot change to unprivileged directory");
 	}
