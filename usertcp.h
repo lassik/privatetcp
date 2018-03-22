@@ -1,5 +1,4 @@
 struct usertcp_client {
-	uint64_t time;
 	uint64_t port;
 	uint64_t uid;
 	uint64_t gid;

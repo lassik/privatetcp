@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "sig.h"
@@ -64,10 +63,8 @@ int
 main(int argc, char *argv[])
 {
 	static struct usertcp_client client;
-	static struct timespec tv;
 	static struct sockaddr_in saddr;
 	static struct sockaddr_in caddr;
-	uint64_t ctime;
 	ssize_t nbyte;
 	uid_t cuid;
 	gid_t cgid;
@@ -166,12 +163,8 @@ main(int argc, char *argv[])
 			warnsys("cannot accept TCP client");
 			continue;
 		}
-		memset(&tv, 0, sizeof(tv));
-		clock_gettime(CLOCK_MONOTONIC, &tv);
-		ctime = tv.tv_sec * 1000000000 + tv.tv_nsec;
 		cport = ntohs(caddr.sin_port);
 		memset(&client, 0, sizeof(client));
-		client.time = ctime;
 		client.port = cport;
 		usertcp_root_server_client(sport, &client);
 		do {
@@ -192,9 +185,6 @@ main(int argc, char *argv[])
 		}
 		if (nbyte != sizeof(client)) {
 			die("short read from helper");
-		}
-		if (client.time != ctime) {
-			die("bad time from helper");
 		}
 		if (client.port != cport) {
 			die("bad port from helper");
