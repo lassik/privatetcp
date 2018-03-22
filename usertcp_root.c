@@ -101,7 +101,7 @@ main(int argc, char *argv[])
 	dup2(devnull, 0);
 	dup2(devnull, 1);
 	if ((ssock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		diesys("cannot create TCP server (socket())");
+		diesys("cannot create TCP socket");
 	}
 	sockopt = 1;
 	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
@@ -109,7 +109,7 @@ main(int argc, char *argv[])
 	saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	saddr.sin_port = htons(sport);
 	if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
-		diesys("cannot create TCP server (bind())");
+		diesys("cannot bind TCP socket");
 	}
 	if ((pipe(tohelper) == -1) || (pipe(fromhelper) == -1)) {
 		diesys("cannot create pipe");
@@ -142,7 +142,7 @@ main(int argc, char *argv[])
 	close(tohelper[0]);
 	close(fromhelper[1]);
 	if (listen(ssock, MAX_BACKLOG) == -1) {
-		diesys("cannot create TCP server (listen())");
+		diesys("cannot listen on TCP socket");
 	}
 	sockopt = fcntl(ssock, F_GETFL, 0);
 	sockopt &= ~O_NONBLOCK;
