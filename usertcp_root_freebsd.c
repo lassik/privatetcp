@@ -15,9 +15,9 @@
 void
 usertcp_root_server_client(unsigned int sport, struct usertcp_client *client)
 {
-	const char mibvar[] = "net.inet.tcp.getcred";
-	struct sockaddr_in sin[2];
-	struct xucred uc;
+	static const char mibvar[] = "net.inet.tcp.getcred";
+	static struct sockaddr_in sin[2];
+	static struct xucred uc;
 	size_t ucsize;
 
 	ucsize = sizeof(uc);
