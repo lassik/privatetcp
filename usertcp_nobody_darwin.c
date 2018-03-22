@@ -20,7 +20,6 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 	struct xtcpcb *xt;
 	size_t len;
 
-	client->uid = 0;
 	if (sysctlbyname(mibvar, 0, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
 		return;
