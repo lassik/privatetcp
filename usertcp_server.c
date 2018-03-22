@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 		if (setreuid(NOBODY_UID, NOBODY_UID) == -1) {
 			diesys("helper: cannot change to unprivileged user");
 		}
-		usertcp_helper(sport);
+		usertcp_nobody_helper(sport);
 		_exit(126);
 	}
 	close(tohelper[0]);

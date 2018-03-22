@@ -15,5 +15,6 @@ void diesys(const char *msg);
 
 void usertcp_client(unsigned int sport, unsigned int cport,
 	char *const *argv);
-void usertcp_helper(unsigned int sport);
-uid_t find_uid(unsigned int sport, unsigned int cport);
+
+void usertcp_nobody_helper(unsigned int sport);
+void usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client);

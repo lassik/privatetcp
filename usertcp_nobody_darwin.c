@@ -11,8 +11,8 @@
 #include "usertcp.h"
 #include "usertcp_config.h"
 
-uid_t
-find_uid(unsigned int sport, unsigned int cport)
+void
+usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 {
 	static const char mibvar[] = "net.inet.tcp.pcblist";
 	static struct xinpgen *xigs;
@@ -20,23 +20,24 @@ find_uid(unsigned int sport, unsigned int cport)
 	struct xtcpcb *xt;
 	size_t len;
 
+	client->uid = 0;
 	if (sysctlbyname(mibvar, 0, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
-		return 0;
+		return;
 	}
 	if (!(xigs = realloc(xigs, len))) {
 		warnsys("helper");
-		return 0;
+		return;
 	}
 	if (sysctlbyname(mibvar, xigs, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
-		return 0;
+		return;
 	}
 	xig = xigs;
 	for (;;) {
 		xig = (struct xinpgen *)((char *)xig + xig->xig_len);
 		if (xig->xig_len <= sizeof(struct xinpgen)) {
-			return 0;
+			break;
 		}
 		xt = (struct xtcpcb *)xig;
 		if (xt->xt_inp.inp_gencnt > xigs->xig_gen) {
@@ -51,9 +52,10 @@ find_uid(unsigned int sport, unsigned int cport)
 		if (ntohs(xt->xt_inp.inp_fport) != sport) {
 			continue;
 		}
-		if (ntohs(xt->xt_inp.inp_lport) != cport) {
+		if (ntohs(xt->xt_inp.inp_lport) != client->port) {
 			continue;
 		}
-		return xt->xt_socket.so_uid;
+		client->uid = xt->xt_socket.so_uid;
+		break;
 	}
 }
