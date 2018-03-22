@@ -59,7 +59,7 @@ main(int argc, char *argv[])
 	pid_t cchild;
 	socklen_t clen;
 
-	if (chdir(UNPRIVILEGED_DIR) == -1) {
+	if (chdir(NOBODY_DIR) == -1) {
 		diesys("cannot change to unprivileged directory");
 	}
 	if (argc < 3) {
