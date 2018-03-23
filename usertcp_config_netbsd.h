@@ -1,0 +1,9 @@
+#define PROGNAME "usertcp"
+#define MAX_BACKLOG 5
+#define MAX_CLIENTS 5
+#define MIN_CLIENT_UID 500
+#define MAX_CLIENT_UID 32766
+#define NOBODY_UID 32767
+#define NOBODY_GID 39
+#define NOBODY_DIR "/"
+#define CLIENT_PATH "/bin:/sbin:/usr/bin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin:/usr/local/bin:/usr/local/sbin"
