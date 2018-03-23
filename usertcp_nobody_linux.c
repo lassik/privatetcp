@@ -15,9 +15,8 @@ void
 usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 {
 	static char buf[128];
-	long local_addr, remote_addr;
+	long local_addr, remote_addr, uid, x;
 	unsigned int local_port, remote_port;
-	long uid, x;
 	int firstline, n;
 
 	firstline = 1;
