@@ -7,6 +7,7 @@
 #include <netinet/tcp_var.h>
 
 #include <stdlib.h>
+#include <string.h>
 
 #include "usertcp.h"
 #include "usertcp_config.h"
@@ -28,6 +29,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		warnsys("helper");
 		return;
 	}
+	memset(xigs, 0, len);
 	if (sysctlbyname(mibvar, xigs, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
 		return;
