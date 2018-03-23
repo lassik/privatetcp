@@ -20,23 +20,24 @@ usertcp_root_helper_init(void)
 void
 usertcp_root_server_client(unsigned int sport, struct usertcp_client *client)
 {
-	static const char mibvar[] = "net.inet.tcp.getcred";
-	static struct sockaddr_in sin[2];
-	static struct ucred uc;
-	size_t ucsize;
+	static const char mib[] = "net.inet.tcp.getcred";
+	static struct sockaddr_in ss[2];
+	struct sockaddr_in *ssin = (struct sockaddr_in *)&ss[1];
+	struct sockaddr_in *csin = (struct sockaddr_in *)&ss[0];
+	static struct ucred cr;
+	size_t crlen;
 
-	ucsize = sizeof(uc);
-	memset(&uc, 0, sizeof(uc));
-	memset(sin, 0, sizeof(sin));
-	sin[0].sin_len = sin[1].sin_len = sizeof(struct sockaddr_in);
-	sin[0].sin_family = sin[1].sin_family = AF_INET;
-	sin[0].sin_addr.s_addr = sin[1].sin_addr.s_addr =
-	    htonl(INADDR_LOOPBACK);
-	sin[0].sin_port = htons(client->port);
-	sin[1].sin_port = htons(sport);
-	if (sysctlbyname(mibvar, &uc, &ucsize, sin, sizeof(sin)) == -1) {
-		warnsys(mibvar);
+	crlen = sizeof(cr);
+	memset(&cr, 0, sizeof(cr));
+	memset(ss, 0, sizeof(ss));
+	ssin->sin_len = csin->sin_len = sizeof(struct sockaddr_in);
+	ssin->sin_family = csin->sin_family = AF_INET;
+	ssin->sin_addr.s_addr = csin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	ssin->sin_port = htons(sport);
+	csin->sin_port = htons(client->port);
+	if (sysctlbyname(mib, &cr, &crlen, ss, sizeof(ss)) == -1) {
+		warnsys("sysctl");
 		return;
 	}
-	client->uid = uc.cr_uid;
+	client->uid = cr.cr_uid;
 }
