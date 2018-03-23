@@ -5,6 +5,7 @@ language: c
 compiler:
   - clang
   - gcc
+env:
+  CFLAGS="-Wall -Wextra -g"
 script:
-  - export CFLAGS="-Werror $CFLAGS"
   - ./build.sh
