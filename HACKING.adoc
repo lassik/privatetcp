@@ -1,0 +1,183 @@
+How it works: 'usertcp'
+=======================
+
+## Start from the command line
+
+'usertcp' is started as root:
+
+     # usertcp <port> </path/to/handler args...>
+
+A simple example for testing with 'netcat':
+
+     # usertcp 1234 /bin/sh -c 'whoami; pwd'
+     $ nc localhost 1234
+
+## Spawn a helper process
+
+According to the principle of least privilege, we are least likely to
+have security problems when we do as little as possible as
+root. 'usertcp' has to call Unix libraries that do complex things like
+parsing files. Code like that is a notoriously fertile soil for bugs
+that turn into exploits. Furthermore, the libraries differ from OS to
+OS so it's impossible to do a thorough code audit.  To contain the
+damage, we spawn a helper process that runs with minimal privileges
+(Unix user `nobody`).
+
+The helper process starts off as root like the main process. It may
+first do some system-dependent initialization as root. It then drops
+privileges to 'nobody'. Then it spends the rest of its life in a loop,
+reading messages from the main process and answering them. This
+inter-process communication is done by passing extremely simple C
+structs via pipes. The main process pre-fills part of the struct and
+writes it to the helper process. The helper reads the struct, fills in
+the rest, and writes it back to the main process.
+
+The first draft of 'usertcp' did IPC using shared memory obtained from
+`mmap`. However, pipes are simpler than shared memory because we don't
+need to worry about non-portable and hard-to-test locking facilities.
+
+## Listen for TCP connections on 127.0.0.1
+
+'usertcp' creates a TCP server socket on the port desired by the
+admin.  Privileged ports (1..1023) are allowed because we are root so
+we can bind to them. Of course, most interesting ports (HTTP, FTP,
+SSH, mail, etc.) are in the privileged range.
+
+An extremely important point is that we bind the server socket to the
+IPv4 *loopback* interface (`INADDR_LOOPBACK`, i.e. `127.0.0.1`). It's
+because of this that only local users can connect to the server.
+Because we create the server socket and handle connections to it in
+the same program, the code handling the connections can trust that
+they are from local users. The first draft of 'usertcp' was written so
+that the server socket came from `tcpserver` or an equivalent
+superserver, and those are easy to configure such that the server is
+bound to external network interfaces accessible by remote users.
+Being able to trust that we're on loopback, we can omit a lot of
+tricky and obscure code to verify that client sockets are local.
+
+Another important point is that since we create the server socket
+ourselves, we can make sure that it is IPv4, not IPv6 (`AF_INET` not
+`AF_INET6`). IPv6 also causes a lot of extra complexity and
+obscurity. At a minimum, all parts of the code that work with IP
+addresses would need to handle two cases: one for IPv4 and one for
+IPv6. Second, IPv6 has a sub address space that maps to the IPv4
+address space, so an IPv4 address may look like an IPv6
+address. Altogether we would have three loopback addresses to worry
+about: IPv4 loopback, IPv6 loopback, and IPv6-mapped IPv4
+loopback. And that's not counting external interfaces on the same
+computer. To top it off, the Unix socket API is based on thorny data
+structure trickery involving typecasts between variants of `struct
+sockaddr`. IPv6 makes this type trickery even worse since IPv6
+addresses are 128 bits wide and do not fit into any C integer type, so
+unions and macros were introduced. Avoiding IPv6 avoids all of this
+tricky code and the obscure corner cases that come with the territory.
+
+## For each new connection, find the user ID (UID)
+
+We ask the kernel which local user ID opened the client end of the TCP
+connection. There is no standard Unix API for this. Kernels have
+widespread support for `getpeereid()` and `getsockopt SO_PEERCRED` to
+do it for Unix-domain sockets. For some reason, those functions do not
+work for IP sockets. I can't think of any reason why they could not
+(they could simply return uid `-1` for connections from other
+computers).
+
+In the absence of a standard API, here's how we do it:
+
+* *NetBSD/OpenBSD*: This is quite straightforward. Use `sysctl
+  net.inet.tcp.ident`, give it two `sockaddr_in` structures
+  representing the client and server ends of the connection, and get
+  back the UID of the client end. Root permissions are needed for this
+  so we do it in the main process before engaging the helper process.
+
+* *FreeBSD/DragonFly BSD*: Use `sysctl net.inet.tcp.getcred`, ditto.
+
+* *MacOS (Darwin)*: There seems to be no straightforward way to get
+    the uid of one socket only. Instead, we need to traverse a massive
+    and convoluted kernel data structure listing all open TCP
+    connections.  This is the data structure used to implement
+    `netstat` and it looks like it's straight from the guts of the
+    TCP/IP stack. It is defined in arcane header files under
+    `/usr/include`.  The main data structure is `struct xtcpcb`
+    (probably means 'eXternal TCP Control Block', external being
+    outside the kernel in userspace). It's a subtype of `struct
+    xinpgen`. We get data from the kernel via `sysctl
+    net.inet.tcp.pcblist` . The sysctl gives us an array of `xinpgen`
+    s that we cast to `xtcpcb` s. I think the data structure and
+    syscall originate from FreeBSD since MacOS (Darwin) incorporated
+    FreeBSD's networking code. The positive thing is, we can do
+    everything as 'nobody' in the helper process.
+
+* **Linux**: Again, there seems to be no straightforward way to get
+    the uid of one socket only so we traverse a list of all open TCP
+    connections. The list is supplied via procfs in the file
+    `/proc/net/tcp` . It's a line-oriented text file so we need to
+    parse it using `scanf`. This may be even worse than the data
+    structures on MacOS - at least those do not need to be
+    parsed. Fortunately we can open `/proc/net/tcp` as root and then
+    read it later as many times as we like with 'nobody'
+    permissions. So we open it as root at the beginning of the helper
+    process before dropping privileges to nobody. A good thing, as
+    `scanf` would be very questionable in code that runs as root.
+
+A minor caveat is that some of these APIs return the 'real' UID while
+others return the 'effective' UID. That shouldn't matter very much
+since the real and effective UID are normally equivalent. The main
+case where they are not is when a regular user is doing something with
+root privileges, or vice versa, and we explicitly disallow root
+clients.
+
+## Find the group ID (GID)
+
+We need to find the user's group ID before we drop privileges to that
+user account. That's because `setgid` can only be run as root so it
+needs to happen before `setuid`.
+
+We find the GID by looking up the UID in the Unix password database
+via `getpwuid()`. We do that in the helper process as 'nobody' because
+password database lookups can be very complex, involving parsing files
+(`/etc/passwd` and its ilk) and maybe even network traffic (for
+NIS/yp). Furthermore, the exact sequence of step depends heavily on
+the OS and how it has been configured by the sysadmin. To be secure,
+we can't do stuff like that as root. And we don't need to. All Unix
+users can read the password database (except for password hashes,
+which we don't need).
+
+## Make sure the UID is sane
+
+Back in the main process, we verify that the UID and GID we got are
+sane. 'usertcp' is designed to be used by people. Most Unix systems
+are designed so that UIDs for people start at 500 or 1000 and go up a
+bit over 65000 (near the maximum value of 16-bit unsigned integers -
+the 'nobody' UID is usually thereabouts). The exact limits are defined
+differently for each OS in the 'usertcp' source code.  Sysadmins are
+free to disobey these limits but we don't accommodate that.
+
+Notably, root (UID 0) cannot connect to a 'usertcp' server.
+
+If the UID isn't in the sane range, we may have done some useless work
+in the helper process to look up the corresponding GID before we got
+to this point. But it's better design to sanity-check the UID in the
+main process that runs as root and ultimately uses the UID. If we
+sanity-checked it in both places that would make code audits harder.
+
+## Spawn a process to run the handler program
+
+Finally we fork a process to handle the client. In that process we:
+
+- Drop privileges to the client UID and GID.
+- Read the password database a second time to get more user info.
+  If we only read the database once, we'd have to devise some complex
+  IPC to pass a bunch of strings from the helper process
+  via the main process to the client process (recall that `struct passwd`
+  contains 'pointers' to strings, not the contents of the strings).
+  That would be quite
+  terrible for security and code clarity. It's much better just
+  to use the battle-tested `getpwuid` API to read that thing twice.
+- Bail out if the user is not allowed to login (shell is `nologin` or `false`).
+- Change to the user's home directory.
+- Clear all environment variables.
+- Set the usual ones:
+  `LOGNAME`, `USER`, `HOME`, `SHELL`, `PATH`
+- Set 'ucspi-tcp' environment variables.
+- Execute 'handler' to do what it wants.
