@@ -1,11 +1,29 @@
 os:
   - linux
   - osx
+
 language: c
 compiler:
   - clang
   - gcc
-env:
-  CFLAGS="-Werror -Wall -Wextra -g"
+
 script:
   - ./build.sh
+
+addons:
+  coverity_scan:
+    project:
+      name: "lassik/usertcp"
+      description: "Build submitted via Travis CI"
+    notification_email: lassi@lassi.io
+    branch_pattern: coverity_scan
+    build_command: ./build.sh
+
+before_install:
+  - echo -n | openssl s_client -connect https://scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+
+env:
+  global:
+    - CFLAGS="-Werror -Wall -Wextra -g"
+    # The next declaration is the encrypted COVERITY_SCAN_TOKEN.
+    - secure: "czNfgP1J9R3sV14ICESwHQmdK50p9Ykct72dIV/gjHMzugnp47kCt9k3tTTxLLT8HyBLik4daVY933XefXaiULb7VGZLtOVKCdnp4q0pcG/tbqrsbGbb6erqnEJCAuq9nRagTRiHAi1S+59HCQRNwPbfFVjCyT+pomY9M5Dq73ftmOQR2lSjobaSUn1+W4NFB4IQttf8f7NNIf2QpkZ7RoU+3STcnJKGIlYjk4cH7oLfK4HZiLNWnAohidlEZpKPHDLNBc+hdBz3/dcrvBOH6yvUGE0vVVYpaPO4JRDFgTnAEvynUomQFGTt9rTYUpsFHGAimBphCDsIyhOuGCexutzaJyCiSHQPNjTUtNYsrY5t2u/0XjWNb/RGDL+eYGqG3OdnR0dQ1sPKjJJxXHAAAfLenGnutKEU8T3j/gNlSjRM4V84txxE4yVJQaJJ0TBTrJ4sgUiIVji11gBnXdiLSppEBR9VcVK7jIuahj0mEeBKnOrVsa0dy9FCyukoWZOV2k9zmBJKkjOMhoRraW7K4/TAQIUZ/2yblWlEK6ffZ5kiBApo26OCqeq3rUlCSzR88BSfAVSuUVZr7sfoLtzMC9XbajybcAQQznvvjCPr8kiavcGWVZibYuTl5M3BNJ3jncCiJOcfAx/sXD+ivkrwf/o3ifQNgEkS9qLpFuwvMxY="
