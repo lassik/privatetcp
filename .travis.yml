@@ -6,6 +6,6 @@ compiler:
   - clang
   - gcc
 env:
-  CFLAGS="-Wall -Wextra -g"
+  CFLAGS="-Werror -Wall -Wextra -g"
 script:
   - ./build.sh
