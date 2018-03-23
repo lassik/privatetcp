@@ -15,13 +15,13 @@
 void
 usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 {
-	static const char mibvar[] = "net.inet.tcp.pcblist";
+	static const char mib[] = "net.inet.tcp.pcblist";
 	static struct xinpgen *xigs;
 	struct xinpgen *xig;
 	struct xtcpcb *xt;
 	size_t len;
 
-	if (sysctlbyname(mibvar, 0, &len, 0, 0) == -1) {
+	if (sysctlbyname(mib, 0, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
 		return;
 	}
@@ -30,7 +30,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		return;
 	}
 	memset(xigs, 0, len);
-	if (sysctlbyname(mibvar, xigs, &len, 0, 0) == -1) {
+	if (sysctlbyname(mib, xigs, &len, 0, 0) == -1) {
 		warnsys("helper: sysctl");
 		return;
 	}
