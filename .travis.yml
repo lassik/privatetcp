@@ -6,4 +6,5 @@ compiler:
   - clang
   - gcc
 script:
+  - export CFLAGS="-Werror $CFLAGS"
   - ./build.sh
