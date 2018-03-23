@@ -100,7 +100,7 @@ main(int argc, char *argv[])
 	}
 	dup2(devnull, 0);
 	dup2(devnull, 1);
-	if ((ssock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+	if ((ssock = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 		diesys("cannot create TCP socket");
 	}
 	sockopt = 1;
