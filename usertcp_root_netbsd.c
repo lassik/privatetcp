@@ -1,5 +1,7 @@
-#include <sys/param.h>
+#include <sys/types.h>
+
 #include <sys/socket.h>
+#include <sys/socketvar.h>
 #include <sys/sysctl.h>
 
 #include <netinet/in.h>
@@ -21,30 +23,24 @@ usertcp_root_helper_init(void)
 void
 usertcp_root_server_client(unsigned int sport, struct usertcp_client *client)
 {
-	static const int mibvar[4] = {
-	    CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_IDENT};
+	static const int mib[] = {CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_IDENT};
 	static struct sockaddr_storage ss[2];
-	static struct sockaddr_in *sin[2];
-	uid_t uid;
+	struct sockaddr_in *ssin = (struct sockaddr_in *)&ss[0];
+	struct sockaddr_in *csin = (struct sockaddr_in *)&ss[1];
 	size_t uidlen;
-	socklen_t sslen;
+	uid_t uid;
 
-	memset(ss, 0, sizeof(ss));
-	sslen = sizeof(ss);
-	sin[0] = (struct sockaddr_in *)&ss[0];
-	sin[1] = (struct sockaddr_in *)&ss[1];
-	sin[0]->sin_len = sizeof(struct sockaddr_in);
-	sin[1]->sin_len = sizeof(struct sockaddr_in);
-	sin[0]->sin_family = AF_INET;
-	sin[1]->sin_family = AF_INET;
-	sin[0]->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	sin[1]->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	sin[0]->sin_port = htons(sport);
-	sin[1]->sin_port = htons(client->port);
 	uidlen = sizeof(uid);
-	if (sysctl(mibvar, sizeof(mibvar) / sizeof(*mibvar), &uid, &uidlen, &ss,
-	        sslen) == -1) {
-		warnsys("net.inet.tcp.ident");
+	uid = 0;
+	memset(ss, 0, sizeof(ss));
+	ssin->sin_len = csin->sin_len = sizeof(struct sockaddr_in);
+	ssin->sin_family = csin->sin_family = AF_INET;
+	ssin->sin_addr.s_addr = csin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	ssin->sin_port = htons(sport);
+	csin->sin_port = htons(client->port);
+	if (sysctl(mib, sizeof(mib) / sizeof(*mib), &uid, &uidlen, ss,
+	        sizeof(ss)) == -1) {
+		warnsys("sysctl");
 		return;
 	}
 	client->uid = uid;

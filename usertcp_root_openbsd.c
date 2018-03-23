@@ -5,6 +5,7 @@
 #include <sys/sysctl.h>
 
 #include <netinet/in.h>
+#include <netinet/ip_var.h>
 #include <netinet/tcp.h>
 #include <netinet/tcp_timer.h>
 #include <netinet/tcp_var.h>
