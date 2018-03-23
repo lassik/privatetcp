@@ -85,6 +85,9 @@ main(int argc, char *argv[])
 	if (argc < 3) {
 		usage("port command [arg ...]");
 	}
+	if (argv[2][0] != '/') {
+		die("command must have an absolute path (i.e. start with /)");
+	}
 	sport = parse_tcp_port(argv[1]);
 	sig_block(SIGCHLD);
 	sig_catch(SIGCHLD, sigchld);

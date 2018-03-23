@@ -58,6 +58,6 @@ usertcp_client(unsigned int sport, unsigned int cport, char *const *argv)
 	}
 	fprintf(stderr, "%s: client: running as %s(%lu): %s\n", progname,
 	    pw->pw_name, (unsigned long)getuid(), argv[0]);
-	execvp(argv[0], argv);
+	execv(argv[0], argv);
 	diesys("client: exec");
 }
