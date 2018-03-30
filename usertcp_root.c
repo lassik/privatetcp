@@ -86,11 +86,8 @@ main(int argc, char *argv[])
 	if (chdir(NOBODY_DIR) == -1) {
 		diesys("cannot change to unprivileged directory");
 	}
-	if (argc < 3) {
-		usage("port command [arg ...]");
-	}
-	if (argv[2][0] != '/') {
-		die("command must have an absolute path (i.e. start with /)");
+	if (argc != 2) {
+		usage("port");
 	}
 	sport = parse_tcp_port(argv[1]);
 	sig_block(SIGCHLD);
@@ -233,7 +230,7 @@ main(int argc, char *argv[])
 			if (setreuid(client.uid, client.uid) == -1) {
 				diesys("client: cannot change to client user");
 			}
-			usertcp_client(&client, (char *const *)&argv[2]);
+			usertcp_client(&client);
 			_exit(126);
 		}
 	}

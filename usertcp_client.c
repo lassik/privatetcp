@@ -13,11 +13,12 @@
 extern char **environ;
 
 void
-usertcp_client(struct usertcp_client *client, char *const *argv)
+usertcp_client(struct usertcp_client *client)
 {
 	static const char client_path[] = CLIENT_PATH;
 	static const char localip[] = "127.0.0.1";
 	static const char localhost[] = "localhost";
+	static const char *argv[2] = {".usertcp", 0};
 	static char sportstr[8];
 	static char cportstr[8];
 	struct passwd *pw;
@@ -59,6 +60,6 @@ usertcp_client(struct usertcp_client *client, char *const *argv)
 	}
 	fprintf(stderr, "%s: client: running as %s(%lu): %s\n", progname,
 	    pw->pw_name, (unsigned long)getuid(), argv[0]);
-	execv(argv[0], argv);
+	execv(argv[0], (char *const *)argv);
 	diesys("client: exec");
 }
