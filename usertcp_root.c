@@ -68,8 +68,6 @@ main(int argc, char *argv[])
 	static struct sockaddr_in saddr;
 	static struct sockaddr_in caddr;
 	ssize_t nbyte;
-	uid_t cuid;
-	gid_t cgid;
 	int devnull;
 	int tohelper[2];
 	int fromhelper[2];
@@ -194,18 +192,15 @@ main(int argc, char *argv[])
 		if (client.port != cport) {
 			die("bad port from helper");
 		}
-		cuid = client.uid;
-		cgid = client.gid;
-		memset(&client, 0, sizeof(client));
-		if (!cuid) {
+		if (!client.uid) {
 			warn("client user not found");
 			continue;
 		}
-		if (cuid < MIN_CLIENT_UID) {
+		if (client.uid < MIN_CLIENT_UID) {
 			warn("client user id below allowed range");
 			continue;
 		}
-		if (cuid > MAX_CLIENT_UID) {
+		if (client.uid > MAX_CLIENT_UID) {
 			warn("client user id above allowed range");
 			continue;
 		}
@@ -225,10 +220,10 @@ main(int argc, char *argv[])
 			sig_unblock(SIGCHLD);
 			sig_catch(SIGTERM, SIG_DFL);
 			sig_catch(SIGPIPE, SIG_DFL);
-			if (setregid(cgid, cgid) == -1) {
+			if (setregid(client.gid, client.gid) == -1) {
 				diesys("client: cannot change to client group");
 			}
-			if (setreuid(cuid, cuid) == -1) {
+			if (setreuid(client.uid, client.uid) == -1) {
 				diesys("client: cannot change to client user");
 			}
 			usertcp_client(sport, cport, (char *const *)&argv[2]);
