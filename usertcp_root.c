@@ -48,6 +48,31 @@ sigchld(void)
 	}
 }
 
+static int
+sort_uniq(int n, unsigned int *vals)
+{
+	int newlen, tail, mini, m;
+	unsigned int newval;
+
+	/* Selection sort */
+	for (newlen = tail = 0; tail < n; tail++) {
+		for (mini = m = tail; m < n; m++) {
+			if (vals[mini] > vals[m]) {
+				mini = m;
+			}
+		}
+		newval = vals[mini];
+		vals[mini] = vals[tail];
+		vals[tail] = newval;
+		if ((newlen > 0) && (vals[newlen - 1] == newval)) {
+			/* Remove duplicate */
+			continue;
+		}
+		vals[newlen++] = newval;
+	}
+	return newlen;
+}
+
 static unsigned int
 parse_tcp_port(const char *str)
 {
@@ -67,7 +92,7 @@ parse_tcp_port(const char *str)
 	return port;
 }
 
-static void
+static int
 parse_tcp_ports(int n, char **strs)
 {
 	if (!(ports = calloc(n, sizeof(*ports)))) {
@@ -76,7 +101,9 @@ parse_tcp_ports(int n, char **strs)
 	for (int i = 0; i < n; i++) {
 		ports[i] = parse_tcp_port(strs[i]);
 	}
+	n = sort_uniq(n, ports);
 	endservent();
+	return n;
 }
 
 int
@@ -104,7 +131,7 @@ main(int argc, char *argv[])
 	}
 	argv++;
 	argc--;
-	parse_tcp_ports(argc, argv);
+	argc = parse_tcp_ports(argc, argv);
 	sig_block(SIGCHLD);
 	sig_catch(SIGCHLD, sigchld);
 	sig_catch(SIGTERM, sigterm);
