@@ -196,7 +196,7 @@ main(int argc, char *argv[])
 		if (nbyte != sizeof(client)) {
 			die("short read from helper");
 		}
-		if (client.cport != cport) {
+		if ((client.sport != sport) || (client.cport != cport)) {
 			die("bad port from helper");
 		}
 		if (client.uid == (uid_t)-1) {
