@@ -156,6 +156,9 @@ main(int argc, char *argv[])
 	}
 	dup2(devnull, 0);
 	dup2(devnull, 1);
+	if (fcntl(2, F_SETFD, FD_CLOEXEC) == -1) {
+		diesys("cannot close standard error on exec");
+	}
 	if (!(fds = calloc(argc, sizeof(*fds)))) {
 		diesys(0);
 	}
