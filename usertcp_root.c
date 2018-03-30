@@ -172,10 +172,10 @@ main(int argc, char *argv[])
 		}
 		cport = ntohs(caddr.sin_port);
 		memset(&client, 0, sizeof(client));
-                client.sport = sport;
+		client.sport = sport;
 		client.cport = cport;
-                client.uid = -1;
-                client.gid = -1;
+		client.uid = -1;
+		client.gid = -1;
 		usertcp_root_server_client(&client);
 		do {
 			nbyte = write(tohelper[1], &client, sizeof(client));
