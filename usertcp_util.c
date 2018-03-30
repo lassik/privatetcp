@@ -26,7 +26,11 @@ warn(const char *msg)
 void
 warnsys(const char *msg)
 {
-	fprintf(stderr, "%s: %s: %s\n", progname, msg, strerror(errno));
+	if (msg) {
+		fprintf(stderr, "%s: %s: %s\n", progname, msg, strerror(errno));
+	} else {
+		warn(strerror(errno));
+	}
 }
 
 void
