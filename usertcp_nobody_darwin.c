@@ -13,7 +13,7 @@
 #include "usertcp_config.h"
 
 void
-usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
+usertcp_nobody_helper_client(struct usertcp_client *client)
 {
 	static const char mib[] = "net.inet.tcp.pcblist";
 	static struct xinpgen *xigs;
@@ -50,7 +50,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		if (ntohl(xt->xt_inp.inp_laddr.s_addr) != INADDR_LOOPBACK) {
 			continue;
 		}
-		if (ntohs(xt->xt_inp.inp_fport) != sport) {
+		if (ntohs(xt->xt_inp.inp_fport) != client->sport) {
 			continue;
 		}
 		if (ntohs(xt->xt_inp.inp_lport) != client->cport) {

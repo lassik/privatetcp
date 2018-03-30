@@ -9,8 +9,7 @@ usertcp_root_helper_init(void)
 }
 
 void
-usertcp_root_server_client(unsigned int sport, struct usertcp_client *client)
+usertcp_root_server_client(struct usertcp_client *client)
 {
-	(void)sport;
 	(void)client;
 }

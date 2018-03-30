@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 		if (setreuid(NOBODY_UID, NOBODY_UID) == -1) {
 			diesys("helper: cannot change to unprivileged user");
 		}
-		usertcp_nobody_helper(sport);
+		usertcp_nobody_helper();
 		_exit(126);
 	}
 	close(tohelper[0]);
@@ -168,10 +168,11 @@ main(int argc, char *argv[])
 		}
 		cport = ntohs(caddr.sin_port);
 		memset(&client, 0, sizeof(client));
+                client.sport = sport;
+		client.cport = cport;
                 client.uid = -1;
                 client.gid = -1;
-		client.cport = cport;
-		usertcp_root_server_client(sport, &client);
+		usertcp_root_server_client(&client);
 		do {
 			nbyte = write(tohelper[1], &client, sizeof(client));
 		} while ((nbyte == -1) && (errno == EINTR));
@@ -228,7 +229,7 @@ main(int argc, char *argv[])
 			if (setreuid(client.uid, client.uid) == -1) {
 				diesys("client: cannot change to client user");
 			}
-			usertcp_client(sport, cport, (char *const *)&argv[2]);
+			usertcp_client(&client, (char *const *)&argv[2]);
 			_exit(126);
 		}
 	}

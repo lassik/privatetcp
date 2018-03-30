@@ -13,7 +13,7 @@
 extern char **environ;
 
 void
-usertcp_client(unsigned int sport, unsigned int cport, char *const *argv)
+usertcp_client(struct usertcp_client *client, char *const *argv)
 {
 	static const char client_path[] = CLIENT_PATH;
 	static const char localip[] = "127.0.0.1";
@@ -37,8 +37,8 @@ usertcp_client(unsigned int sport, unsigned int cport, char *const *argv)
 	if (chdir(pw->pw_dir) == -1) {
 		diesys("client: cannot change to user's home directory");
 	}
-	snprintf(sportstr, sizeof(sportstr), "%u", sport);
-	snprintf(cportstr, sizeof(cportstr), "%u", cport);
+	snprintf(sportstr, sizeof(sportstr), "%u", client->sport);
+	snprintf(cportstr, sizeof(cportstr), "%u", client->cport);
 	if (!(environ = calloc(1, sizeof(*environ)))) {
 		diesys("client: cannot clear environment");
 	}

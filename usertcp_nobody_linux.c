@@ -12,7 +12,7 @@
 extern FILE *usertcp_helper_proc_net_tcp;
 
 void
-usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
+usertcp_nobody_helper_client(struct usertcp_client *client)
 {
 	static char buf[128];
 	long local_addr, remote_addr, uid, x;
@@ -41,7 +41,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		if (local_port != client->cport) {
 			continue;
 		}
-		if (remote_port != sport) {
+		if (remote_port != client->sport) {
 			continue;
 		}
 		client->uid = uid;

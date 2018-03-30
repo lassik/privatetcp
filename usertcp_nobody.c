@@ -11,7 +11,7 @@
 #include "usertcp_config.h"
 
 void
-usertcp_nobody_helper(unsigned int sport)
+usertcp_nobody_helper(void)
 {
 	static struct usertcp_client client;
 	struct passwd *pw;
@@ -30,7 +30,7 @@ usertcp_nobody_helper(unsigned int sport)
 		if (nbyte != sizeof(client)) {
 			die("helper: short read");
 		}
-		usertcp_nobody_helper_client(sport, &client);
+		usertcp_nobody_helper_client(&client);
 		errno = 0;
 		pw = (client.uid == (uid_t)-1) ? 0 : getpwuid(client.uid);
 		if (pw) {
