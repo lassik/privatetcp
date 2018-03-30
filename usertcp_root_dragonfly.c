@@ -6,7 +6,6 @@
 
 #include <netinet/in.h>
 
-#include <stdint.h>
 #include <string.h>
 
 #include "usertcp.h"

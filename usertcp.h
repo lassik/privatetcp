@@ -1,7 +1,7 @@
 struct usertcp_client {
-	uint64_t port;
-	uint64_t uid;
-	uint64_t gid;
+	unsigned int port;
+	uid_t uid;
+	gid_t gid;
 };
 
 extern const char progname[];

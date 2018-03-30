@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <sys/types.h>
 
 #include "usertcp.h"
 #include "usertcp_config.h"
