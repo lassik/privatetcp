@@ -22,6 +22,8 @@ usertcp_client(struct usertcp_client *client, char *const *argv)
 	static char cportstr[8];
 	struct passwd *pw;
 
+	snprintf(sportstr, sizeof(sportstr), "%u", client->sport);
+	snprintf(cportstr, sizeof(cportstr), "%u", client->cport);
 	errno = 0;
 	pw = getpwuid(getuid());
 	if (!pw && errno) {
@@ -37,8 +39,6 @@ usertcp_client(struct usertcp_client *client, char *const *argv)
 	if (chdir(pw->pw_dir) == -1) {
 		diesys("client: cannot change to user's home directory");
 	}
-	snprintf(sportstr, sizeof(sportstr), "%u", client->sport);
-	snprintf(cportstr, sizeof(cportstr), "%u", client->cport);
 	if (!(environ = calloc(1, sizeof(*environ)))) {
 		diesys("client: cannot clear environment");
 	}
