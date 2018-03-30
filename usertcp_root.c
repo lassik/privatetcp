@@ -170,7 +170,7 @@ main(int argc, char *argv[])
 		memset(&client, 0, sizeof(client));
                 client.uid = -1;
                 client.gid = -1;
-		client.port = cport;
+		client.cport = cport;
 		usertcp_root_server_client(sport, &client);
 		do {
 			nbyte = write(tohelper[1], &client, sizeof(client));
@@ -191,7 +191,7 @@ main(int argc, char *argv[])
 		if (nbyte != sizeof(client)) {
 			die("short read from helper");
 		}
-		if (client.port != cport) {
+		if (client.cport != cport) {
 			die("bad port from helper");
 		}
 		if (client.uid == (uid_t)-1) {

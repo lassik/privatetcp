@@ -1,5 +1,5 @@
 struct usertcp_client {
-	unsigned int port;
+	unsigned int cport;
 	uid_t uid;
 	gid_t gid;
 };

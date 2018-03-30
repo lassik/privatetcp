@@ -37,7 +37,7 @@ usertcp_root_server_client(unsigned int sport, struct usertcp_client *client)
 	ssin->sin_family = csin->sin_family = AF_INET;
 	ssin->sin_addr.s_addr = csin->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	ssin->sin_port = htons(sport);
-	csin->sin_port = htons(client->port);
+	csin->sin_port = htons(client->cport);
 	if (sysctl(mib, sizeof(mib) / sizeof(*mib), &uid, &uidlen, ss,
 	        sizeof(ss)) == -1) {
 		warnsys("sysctl");

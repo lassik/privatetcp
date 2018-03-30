@@ -53,7 +53,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		if (ntohs(xt->xt_inp.inp_fport) != sport) {
 			continue;
 		}
-		if (ntohs(xt->xt_inp.inp_lport) != client->port) {
+		if (ntohs(xt->xt_inp.inp_lport) != client->cport) {
 			continue;
 		}
 		client->uid = xt->xt_socket.so_uid;

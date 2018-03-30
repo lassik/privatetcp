@@ -38,7 +38,7 @@ usertcp_nobody_helper_client(unsigned int sport, struct usertcp_client *client)
 		if (ntohl(remote_addr) != INADDR_LOOPBACK) {
 			continue;
 		}
-		if (local_port != client->port) {
+		if (local_port != client->cport) {
 			continue;
 		}
 		if (remote_port != sport) {
