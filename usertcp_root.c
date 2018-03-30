@@ -24,6 +24,10 @@ static volatile unsigned long nclient;
 static void
 sigterm(void)
 {
+	if (helper) {
+		kill(helper, SIGTERM);
+		waitpid(helper, 0, WNOHANG);
+	}
 	_exit(0);
 }
 
