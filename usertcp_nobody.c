@@ -37,7 +37,6 @@ usertcp_nobody_helper(unsigned int sport)
 			client.gid = pw->pw_gid;
 		} else {
 			client.uid = 0;
-			client.gid = 0;
 			if (errno) {
 				warnsys("helper: cannot get user info");
 			}
