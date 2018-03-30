@@ -9,8 +9,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
+#include <poll.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -20,6 +22,7 @@
 
 static volatile pid_t helper;
 static volatile unsigned long nclient;
+static unsigned int *ports;
 
 static void
 sigterm(void)
@@ -57,7 +60,6 @@ parse_tcp_port(const char *str)
 			die("TCP port number not found for that service");
 		}
 		port = ntohs(s->s_port);
-		endservent();
 	}
 	if ((port < 1) || (port > 65535)) {
 		die("invalid TCP port number");
@@ -65,17 +67,30 @@ parse_tcp_port(const char *str)
 	return port;
 }
 
+static void
+parse_tcp_ports(int n, char **strs)
+{
+	if (!(ports = calloc(n, sizeof(*ports)))) {
+		diesys(0);
+	}
+	for (int i = 0; i < n; i++) {
+		ports[i] = parse_tcp_port(strs[i]);
+	}
+	endservent();
+}
+
 int
 main(int argc, char *argv[])
 {
 	static struct usertcp_client client;
 	static struct sockaddr_in sin;
+	static struct pollfd *fds;
 	ssize_t nbyte;
 	int devnull;
 	int tohelper[2];
 	int fromhelper[2];
-	int sockopt, ssock, csock;
-	unsigned int sport, cport;
+	int csock;
+	unsigned int cport;
 	pid_t cchild;
 
 	if (geteuid()) {
@@ -84,10 +99,12 @@ main(int argc, char *argv[])
 	if (chdir(NOBODY_DIR) == -1) {
 		diesys("cannot change to unprivileged directory");
 	}
-	if (argc != 2) {
-		usage("port");
+	if (argc < 2) {
+		usage("port [port ...]");
 	}
-	sport = parse_tcp_port(argv[1]);
+	argv++;
+	argc--;
+	parse_tcp_ports(argc, argv);
 	sig_block(SIGCHLD);
 	sig_catch(SIGCHLD, sigchld);
 	sig_catch(SIGTERM, sigterm);
@@ -99,16 +116,32 @@ main(int argc, char *argv[])
 	}
 	dup2(devnull, 0);
 	dup2(devnull, 1);
-	if ((ssock = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
-		diesys("cannot create TCP socket");
+	if (!(fds = calloc(argc, sizeof(*fds)))) {
+		diesys(0);
 	}
-	sockopt = 1;
-	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	sin.sin_port = htons(sport);
-	if (bind(ssock, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-		diesys("cannot bind TCP socket");
+	for (int i = 0; i < argc; i++) {
+		int opt;
+		fprintf(stderr, "serving on port %u\n", ports[i]);
+		if ((fds[i].fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
+			diesys("cannot create TCP socket");
+		}
+		opt = 1;
+		setsockopt(
+		    fds[i].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		sin.sin_family = AF_INET;
+		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+		sin.sin_port = htons(ports[i]);
+		if (bind(fds[i].fd, (struct sockaddr *)&sin, sizeof(sin)) ==
+		    -1) {
+			diesys("cannot bind TCP socket");
+		}
+		if (listen(fds[i].fd, MAX_BACKLOG) == -1) {
+			diesys("cannot listen on TCP socket");
+		}
+		opt = fcntl(fds[i].fd, F_GETFL, 0);
+		opt &= ~O_NONBLOCK;
+		fcntl(fds[i].fd, F_SETFL, opt);
+		fds[i].events = POLLIN;
 	}
 	if ((pipe(tohelper) == -1) || (pipe(fromhelper) == -1)) {
 		diesys("cannot create pipe");
@@ -123,113 +156,136 @@ main(int argc, char *argv[])
 		close(tohelper[1]);
 		close(fromhelper[0]);
 		close(fromhelper[1]);
-		close(ssock);
+		for (int k = 0; k < argc; k++) {
+			close(fds[k].fd);
+		}
 		sig_catch(SIGCHLD, SIG_DFL);
 		sig_unblock(SIGCHLD);
 		sig_catch(SIGTERM, SIG_DFL);
 		sig_catch(SIGPIPE, SIG_DFL);
 		usertcp_root_helper_init();
 		if (setregid(NOBODY_GID, NOBODY_GID) == -1) {
-			diesys("helper: cannot change to unprivileged group");
+			diesys("helper: cannot change to "
+			       "unprivileged group");
 		}
 		if (setreuid(NOBODY_UID, NOBODY_UID) == -1) {
-			diesys("helper: cannot change to unprivileged user");
+			diesys("helper: cannot change to "
+			       "unprivileged user");
 		}
 		usertcp_nobody_helper();
 		_exit(126);
 	}
 	close(tohelper[0]);
 	close(fromhelper[1]);
-	if (listen(ssock, MAX_BACKLOG) == -1) {
-		diesys("cannot listen on TCP socket");
-	}
-	sockopt = fcntl(ssock, F_GETFL, 0);
-	sockopt &= ~O_NONBLOCK;
-	fcntl(ssock, F_SETFL, sockopt);
 	csock = -1;
 	for (;;) {
 		if (csock != -1) {
 			close(csock);
 		}
 		csock = -1;
-		while (nclient >= MAX_CLIENTS) {
-			sig_pause();
+		if (poll(fds, argc, -1) == -1) {
+			if ((errno == EINTR) || (errno == EAGAIN)) {
+				continue;
+			}
+			diesys("cannot poll");
 		}
-		sig_unblock(SIGCHLD);
-		do {
-			socklen_t clen = sizeof(sin);
-			csock = accept(ssock, (struct sockaddr *)&sin, &clen);
-		} while ((csock == -1) && (errno == EINTR));
-		sig_block(SIGCHLD);
-		if (csock == -1) {
-			warnsys("cannot accept TCP client");
-			continue;
-		}
-		cport = ntohs(sin.sin_port);
-		memset(&client, 0, sizeof(client));
-		client.sport = sport;
-		client.cport = cport;
-		client.uid = -1;
-		client.gid = -1;
-		usertcp_root_server_client(&client);
-		do {
-			nbyte = write(tohelper[1], &client, sizeof(client));
-		} while ((nbyte == -1) && (errno == EINTR));
-		if (nbyte == -1) {
-			warnsys("cannot write to helper");
-			continue;
-		}
-		if (nbyte != sizeof(client)) {
-			die("short write to helper");
-		}
-		do {
-			nbyte = read(fromhelper[0], &client, sizeof(client));
-		} while ((nbyte == -1) && (errno == EINTR));
-		if (nbyte == -1) {
-			diesys("cannot read from helper");
-		}
-		if (nbyte != sizeof(client)) {
-			die("short read from helper");
-		}
-		if ((client.sport != sport) || (client.cport != cport)) {
-			die("bad port from helper");
-		}
-		if (client.uid == (uid_t)-1) {
-			warn("client user not found");
-			continue;
-		}
-		if (client.uid < MIN_CLIENT_UID) {
-			warn("client user id below allowed range");
-			continue;
-		}
-		if (client.uid > MAX_CLIENT_UID) {
-			warn("client user id above allowed range");
-			continue;
-		}
-		if ((cchild = fork()) == -1) {
-			warnsys("cannot fork");
-			continue;
-		}
-		nclient++;
-		if (!cchild) {
-			dup2(csock, 0);
-			dup2(csock, 1);
-			close(csock);
-			close(ssock);
-			close(tohelper[1]);
-			close(fromhelper[0]);
-			sig_catch(SIGCHLD, SIG_DFL);
+		for (int i = 0; i < argc; i++) {
+			if (csock != -1) {
+				close(csock);
+			}
+			csock = -1;
+			if (!(fds[i].revents & POLLIN)) {
+				continue;
+			}
+			while (nclient >= MAX_CLIENTS) {
+				sig_pause();
+			}
 			sig_unblock(SIGCHLD);
-			sig_catch(SIGTERM, SIG_DFL);
-			sig_catch(SIGPIPE, SIG_DFL);
-			if (setregid(client.gid, client.gid) == -1) {
-				diesys("client: cannot change to client group");
+			do {
+				socklen_t clen = sizeof(sin);
+				csock = accept(
+				    fds[i].fd, (struct sockaddr *)&sin, &clen);
+			} while ((csock == -1) && (errno == EINTR));
+			sig_block(SIGCHLD);
+			if (csock == -1) {
+				warnsys("cannot accept TCP client");
+				continue;
 			}
-			if (setreuid(client.uid, client.uid) == -1) {
-				diesys("client: cannot change to client user");
+			cport = ntohs(sin.sin_port);
+			memset(&client, 0, sizeof(client));
+			client.sport = ports[i];
+			client.cport = cport;
+			client.uid = -1;
+			client.gid = -1;
+			usertcp_root_server_client(&client);
+			do {
+				nbyte =
+				    write(tohelper[1], &client, sizeof(client));
+			} while ((nbyte == -1) && (errno == EINTR));
+			if (nbyte == -1) {
+				warnsys("cannot write to helper");
+				continue;
 			}
-			usertcp_client(&client);
-			_exit(126);
+			if (nbyte != sizeof(client)) {
+				die("short write to helper");
+			}
+			do {
+				nbyte = read(
+				    fromhelper[0], &client, sizeof(client));
+			} while ((nbyte == -1) && (errno == EINTR));
+			if (nbyte == -1) {
+				diesys("cannot read from helper");
+			}
+			if (nbyte != sizeof(client)) {
+				die("short read from helper");
+			}
+			if ((client.sport != ports[i]) ||
+			    (client.cport != cport)) {
+				die("bad port from helper");
+			}
+			if (client.uid == (uid_t)-1) {
+				warn("client user not found");
+				continue;
+			}
+			if (client.uid < MIN_CLIENT_UID) {
+				warn("client user id below allowed "
+				     "range");
+				continue;
+			}
+			if (client.uid > MAX_CLIENT_UID) {
+				warn("client user id above allowed "
+				     "range");
+				continue;
+			}
+			if ((cchild = fork()) == -1) {
+				warnsys("cannot fork");
+				continue;
+			}
+			nclient++;
+			if (!cchild) {
+				dup2(csock, 0);
+				dup2(csock, 1);
+				close(csock);
+				close(tohelper[1]);
+				close(fromhelper[0]);
+				for (int k = 0; k < argc; k++) {
+					close(fds[k].fd);
+				}
+				sig_catch(SIGCHLD, SIG_DFL);
+				sig_unblock(SIGCHLD);
+				sig_catch(SIGTERM, SIG_DFL);
+				sig_catch(SIGPIPE, SIG_DFL);
+				if (setregid(client.gid, client.gid) == -1) {
+					diesys("client: cannot change "
+					       "to client group");
+				}
+				if (setreuid(client.uid, client.uid) == -1) {
+					diesys("client: cannot change "
+					       "to client user");
+				}
+				usertcp_client(&client);
+				_exit(126);
+			}
 		}
 	}
 	return 0;
