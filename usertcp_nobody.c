@@ -32,11 +32,11 @@ usertcp_nobody_helper(unsigned int sport)
 		}
 		usertcp_nobody_helper_client(sport, &client);
 		errno = 0;
-		pw = client.uid ? getpwuid(client.uid) : 0;
+		pw = (client.uid == (uid_t)-1) ? 0 : getpwuid(client.uid);
 		if (pw) {
 			client.gid = pw->pw_gid;
 		} else {
-			client.uid = 0;
+			client.uid = -1;
 			if (errno) {
 				warnsys("helper: cannot get user info");
 			}

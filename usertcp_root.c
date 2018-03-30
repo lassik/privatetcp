@@ -168,6 +168,8 @@ main(int argc, char *argv[])
 		}
 		cport = ntohs(caddr.sin_port);
 		memset(&client, 0, sizeof(client));
+                client.uid = -1;
+                client.gid = -1;
 		client.port = cport;
 		usertcp_root_server_client(sport, &client);
 		do {
@@ -192,7 +194,7 @@ main(int argc, char *argv[])
 		if (client.port != cport) {
 			die("bad port from helper");
 		}
-		if (!client.uid) {
+		if (client.uid == (uid_t)-1) {
 			warn("client user not found");
 			continue;
 		}
