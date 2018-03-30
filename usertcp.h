@@ -13,7 +13,7 @@ void warnsys(const char *msg);
 void die(const char *msg);
 void diesys(const char *msg);
 
-void usertcp_client(struct usertcp_client *client);
+void usertcp_client(struct usertcp_client *client, const char *service);
 
 void usertcp_nobody_helper(void);
 void usertcp_nobody_helper_client(struct usertcp_client *client);

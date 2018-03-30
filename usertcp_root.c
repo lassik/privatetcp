@@ -23,6 +23,7 @@
 static volatile pid_t helper;
 static volatile unsigned long nclient;
 static unsigned int *ports;
+static char **services;
 
 static void
 sigterm(void)
@@ -93,8 +94,10 @@ parse_tcp_port(const char *str)
 }
 
 static int
-parse_tcp_ports(int n, char **strs)
+parse_tcp_ports_and_services(int n, char **strs)
 {
+	struct servent *s;
+
 	if (!(ports = calloc(n, sizeof(*ports)))) {
 		diesys(0);
 	}
@@ -102,6 +105,16 @@ parse_tcp_ports(int n, char **strs)
 		ports[i] = parse_tcp_port(strs[i]);
 	}
 	n = sort_uniq(n, ports);
+	if (!(services = calloc(n, sizeof(*services)))) {
+		diesys(0);
+	}
+	for (int i = 0; i < n; i++) {
+		if (!(s = getservbyport(htons(ports[i]), "tcp"))) {
+			services[i] = "";
+		} else if (!(services[i] = strdup(s->s_name))) {
+			diesys(0);
+		}
+	}
 	endservent();
 	return n;
 }
@@ -131,7 +144,7 @@ main(int argc, char *argv[])
 	}
 	argv++;
 	argc--;
-	argc = parse_tcp_ports(argc, argv);
+	argc = parse_tcp_ports_and_services(argc, argv);
 	sig_block(SIGCHLD);
 	sig_catch(SIGCHLD, sigchld);
 	sig_catch(SIGTERM, sigterm);
@@ -310,7 +323,7 @@ main(int argc, char *argv[])
 					diesys("client: cannot change "
 					       "to client user");
 				}
-				usertcp_client(&client);
+				usertcp_client(&client, services[i]);
 				_exit(126);
 			}
 		}

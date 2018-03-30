@@ -13,7 +13,7 @@
 extern char **environ;
 
 void
-usertcp_client(struct usertcp_client *client)
+usertcp_client(struct usertcp_client *client, const char *service)
 {
 	static const char client_path[] = CLIENT_PATH;
 	static const char localip[] = "127.0.0.1";
@@ -48,6 +48,7 @@ usertcp_client(struct usertcp_client *client)
 	    (setenv("HOME", pw->pw_dir, 1) == -1) ||
 	    (setenv("SHELL", pw->pw_shell, 1) == -1) ||
 	    (setenv("PATH", client_path, 1) == -1) ||
+	    (setenv("SERVICE", service, 1) == -1) ||
 	    (setenv("PROTO", "TCP", 1) == -1) ||
 	    (setenv("TCPLOCALIP", localip, 1) == -1) ||
 	    (setenv("TCPLOCALPORT", sportstr, 1) == -1) ||
