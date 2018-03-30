@@ -62,8 +62,9 @@ usertcp_client(struct usertcp_client *client, const char *service)
 	    (setenv("TCPREMOTEINFO", pw->pw_name, 1) == -1)) {
 		diesys("client: cannot set environment");
 	}
-	fprintf(stderr, "%s: client: running as %s(%lu): %s\n", progname,
-	    pw->pw_name, (unsigned long)getuid(), argv[0]);
+	fprintf(stderr, "%s: client: user %lu(%s) group %lu on port %s(%s)\n",
+	    progname, (unsigned long)getuid(), pw->pw_name,
+	    (unsigned long)client->gid, sportstr, service);
 	execv(argv[0], (char *const *)argv);
 	diesys("client: exec");
 }

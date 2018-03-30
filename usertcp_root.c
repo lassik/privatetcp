@@ -164,7 +164,8 @@ main(int argc, char *argv[])
 	}
 	for (int i = 0; i < argc; i++) {
 		int opt;
-		fprintf(stderr, "serving on port %u\n", ports[i]);
+		fprintf(stderr, "%s: serving on port %u(%s)\n", progname,
+		    ports[i], services[i]);
 		if ((fds[i].fd = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
 			diesys("cannot create TCP socket");
 		}
