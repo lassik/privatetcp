@@ -69,8 +69,7 @@ int
 main(int argc, char *argv[])
 {
 	static struct usertcp_client client;
-	static struct sockaddr_in saddr;
-	static struct sockaddr_in caddr;
+	static struct sockaddr_in sin;
 	ssize_t nbyte;
 	int devnull;
 	int tohelper[2];
@@ -78,7 +77,6 @@ main(int argc, char *argv[])
 	int sockopt, ssock, csock;
 	unsigned int sport, cport;
 	pid_t cchild;
-	socklen_t clen;
 
 	if (geteuid()) {
 		die("must be started as root");
@@ -106,10 +104,10 @@ main(int argc, char *argv[])
 	}
 	sockopt = 1;
 	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt));
-	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	saddr.sin_port = htons(sport);
-	if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr)) == -1) {
+	sin.sin_family = AF_INET;
+	sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	sin.sin_port = htons(sport);
+	if (bind(ssock, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 		diesys("cannot bind TCP socket");
 	}
 	if ((pipe(tohelper) == -1) || (pipe(fromhelper) == -1)) {
@@ -159,15 +157,15 @@ main(int argc, char *argv[])
 		}
 		sig_unblock(SIGCHLD);
 		do {
-			clen = sizeof(caddr);
-			csock = accept(ssock, (struct sockaddr *)&caddr, &clen);
+			socklen_t clen = sizeof(sin);
+			csock = accept(ssock, (struct sockaddr *)&sin, &clen);
 		} while ((csock == -1) && (errno == EINTR));
 		sig_block(SIGCHLD);
 		if (csock == -1) {
 			warnsys("cannot accept TCP client");
 			continue;
 		}
-		cport = ntohs(caddr.sin_port);
+		cport = ntohs(sin.sin_port);
 		memset(&client, 0, sizeof(client));
 		client.sport = sport;
 		client.cport = cport;
