@@ -1,5 +1,7 @@
 #include <sys/types.h>
 
+#include <sys/stat.h>
+
 #include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -25,6 +27,7 @@ usertcp_client(struct usertcp_client *client, const char *service)
 
 	snprintf(sportstr, sizeof(sportstr), "%u", client->sport);
 	snprintf(cportstr, sizeof(cportstr), "%u", client->cport);
+	umask(0077);
 	errno = 0;
 	pw = getpwuid(getuid());
 	if (!pw && errno) {
