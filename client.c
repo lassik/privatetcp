@@ -9,8 +9,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "privatetcp.h"
 #include "config.h"
+#include "privatetcp.h"
 
 extern char **environ;
 
