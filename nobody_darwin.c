@@ -9,11 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
 void
-usertcp_nobody_helper_client(struct usertcp_client *client)
+privatetcp_nobody_helper_client(struct privatetcp_client *client)
 {
 	static const char mib[] = "net.inet.tcp.pcblist";
 	static struct xinpgen *xigs;

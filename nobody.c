@@ -7,13 +7,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
 void
-usertcp_nobody_helper(void)
+privatetcp_nobody_helper(void)
 {
-	static struct usertcp_client client;
+	static struct privatetcp_client client;
 	struct passwd *pw;
 	ssize_t nbyte;
 
@@ -30,7 +30,7 @@ usertcp_nobody_helper(void)
 		if (nbyte != sizeof(client)) {
 			die("helper: short read");
 		}
-		usertcp_nobody_helper_client(&client);
+		privatetcp_nobody_helper_client(&client);
 		errno = 0;
 		pw = (client.uid == (uid_t)-1) ? 0 : getpwuid(client.uid);
 		if (pw) {

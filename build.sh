@@ -9,12 +9,12 @@ echo "Entering directory '$PWD'"
 export CC="${CC:-clang}"
 export CFLAGS="${CFLAGS:--Werror -Wall -Wextra -g}"
 set -x
-cp -p ../usertcp_config_"$uname".h usertcp_config.h
-$CC $CFLAGS -I . -o usertcp \
-    ../usertcp_client.c \
-    ../usertcp_nobody.c \
-    ../usertcp_nobody_"$uname".c \
-    ../usertcp_root.c \
-    ../usertcp_root_"$uname".c \
-    ../usertcp_util.c \
-    ../sig.c
+cp -p ../config_"$uname".h config.h
+$CC $CFLAGS -I . -o privatetcp \
+    ../client.c \
+    ../nobody.c \
+    ../nobody_"$uname".c \
+    ../root.c \
+    ../root_"$uname".c \
+    ../sig.c \
+    ../util.c

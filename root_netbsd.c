@@ -12,16 +12,16 @@
 
 #include <string.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
 void
-usertcp_root_helper_init(void)
+privatetcp_root_helper_init(void)
 {
 }
 
 void
-usertcp_root_server_client(struct usertcp_client *client)
+privatetcp_root_server_client(struct privatetcp_client *client)
 {
 	static const int mib[] = {CTL_NET, PF_INET, IPPROTO_TCP, TCPCTL_IDENT};
 	static struct sockaddr_storage ss[2];

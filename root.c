@@ -16,9 +16,9 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "config.h"
+#include "privatetcp.h"
 #include "sig.h"
-#include "usertcp.h"
-#include "usertcp_config.h"
 
 static volatile pid_t helper;
 static volatile unsigned long nclient;
@@ -122,7 +122,7 @@ parse_tcp_ports_and_services(int n, char **strs)
 int
 main(int argc, char *argv[])
 {
-	static struct usertcp_client client;
+	static struct privatetcp_client client;
 	static struct sockaddr_in sin;
 	static struct pollfd *fds;
 	ssize_t nbyte;
@@ -207,7 +207,7 @@ main(int argc, char *argv[])
 		sig_unblock(SIGCHLD);
 		sig_catch(SIGTERM, SIG_DFL);
 		sig_catch(SIGPIPE, SIG_DFL);
-		usertcp_root_helper_init();
+		privatetcp_root_helper_init();
 		if (setregid(NOBODY_GID, NOBODY_GID) == -1) {
 			diesys("helper: cannot change to "
 			       "unprivileged group");
@@ -216,7 +216,7 @@ main(int argc, char *argv[])
 			diesys("helper: cannot change to "
 			       "unprivileged user");
 		}
-		usertcp_nobody_helper();
+		privatetcp_nobody_helper();
 		_exit(126);
 	}
 	close(tohelper[0]);
@@ -261,7 +261,7 @@ main(int argc, char *argv[])
 			client.cport = cport;
 			client.uid = -1;
 			client.gid = -1;
-			usertcp_root_server_client(&client);
+			privatetcp_root_server_client(&client);
 			do {
 				nbyte =
 				    write(tohelper[1], &client, sizeof(client));
@@ -327,7 +327,7 @@ main(int argc, char *argv[])
 					diesys("client: cannot change "
 					       "to client user");
 				}
-				usertcp_client(&client, services[i]);
+				privatetcp_client(&client, services[i]);
 				_exit(126);
 			}
 		}

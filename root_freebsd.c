@@ -8,22 +8,22 @@
 
 #include <string.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
 void
-usertcp_root_helper_init(void)
+privatetcp_root_helper_init(void)
 {
 }
 
 void
-usertcp_root_server_client(struct usertcp_client *client)
+privatetcp_root_server_client(struct privatetcp_client *client)
 {
 	static const char mib[] = "net.inet.tcp.getcred";
 	static struct sockaddr_in ss[2];
 	struct sockaddr_in *ssin = &ss[1];
 	struct sockaddr_in *csin = &ss[0];
-	static struct ucred cr;
+	static struct xucred cr;
 	size_t crlen;
 
 	crlen = sizeof(cr);
@@ -36,6 +36,9 @@ usertcp_root_server_client(struct usertcp_client *client)
 	csin->sin_port = htons(client->cport);
 	if (sysctlbyname(mib, &cr, &crlen, ss, sizeof(ss)) == -1) {
 		warnsys("sysctl");
+		return;
+	}
+	if (cr.cr_version != XUCRED_VERSION) {
 		return;
 	}
 	client->uid = cr.cr_uid;

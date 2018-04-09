@@ -9,18 +9,18 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "privatetcp.h"
+#include "config.h"
 
 extern char **environ;
 
 void
-usertcp_client(struct usertcp_client *client, const char *service)
+privatetcp_client(struct privatetcp_client *client, const char *service)
 {
 	static const char client_path[] = CLIENT_PATH;
 	static const char localip[] = "127.0.0.1";
 	static const char localhost[] = "localhost";
-	static const char *argv[2] = {".usertcp", 0};
+	static const char *argv[2] = {".privatetcp", 0};
 	static char sportstr[8];
 	static char cportstr[8];
 	struct passwd *pw;

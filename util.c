@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
 const char progname[] = PROGNAME;
 

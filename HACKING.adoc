@@ -1,27 +1,27 @@
-How it works: 'usertcp'
+How it works: 'privatetcp'
 =======================
 
 ## Start from the command line
 
-'usertcp' is started as root:
+'privatetcp' is started as root:
 
-     # usertcp <port> </path/to/handler args...>
+     # privatetcp <port> </path/to/handler args...>
 
 A simple example for testing with 'netcat':
 
-     # usertcp 1234 /bin/sh -c 'whoami; pwd'
+     # privatetcp 1234 /bin/sh -c 'whoami; pwd'
      $ nc localhost 1234
 
 ## Spawn a helper process
 
 According to the principle of least privilege, we are least likely to
 have security problems when we do as little as possible as
-root. 'usertcp' has to call Unix libraries that do complex things like
-parsing files. Code like that is a notoriously fertile soil for bugs
-that turn into exploits. Furthermore, the libraries differ from OS to
-OS so it's impossible to do a thorough code audit.  To contain the
-damage, we spawn a helper process that runs with minimal privileges
-(Unix user `nobody`).
+root. 'privatetcp' has to call Unix libraries that do complex things
+like parsing files. Code like that is a notoriously fertile soil for
+bugs that turn into exploits. Furthermore, the libraries differ from
+OS to OS so it's impossible to do a thorough code audit.  To contain
+the damage, we spawn a helper process that runs with minimal
+privileges (Unix user `nobody`).
 
 The helper process starts off as root like the main process. It may
 first do some system-dependent initialization as root. It then drops
@@ -32,13 +32,14 @@ structs via pipes. The main process pre-fills part of the struct and
 writes it to the helper process. The helper reads the struct, fills in
 the rest, and writes it back to the main process.
 
-The first draft of 'usertcp' did IPC using shared memory obtained from
-`mmap`. However, pipes are simpler than shared memory because we don't
-need to worry about non-portable and hard-to-test locking facilities.
+The first draft of 'privatetcp' did IPC using shared memory obtained
+from `mmap`. However, pipes are simpler than shared memory because we
+don't need to worry about non-portable and hard-to-test locking
+facilities.
 
 ## Listen for TCP connections on 127.0.0.1
 
-'usertcp' creates a TCP server socket on the port desired by the
+'privatetcp' creates a TCP server socket on the port desired by the
 admin.  Privileged ports (1..1023) are allowed because we are root so
 we can bind to them. Of course, most interesting ports (HTTP, FTP,
 SSH, mail, etc.) are in the privileged range.
@@ -48,8 +49,8 @@ IPv4 *loopback* interface (`INADDR_LOOPBACK`, i.e. `127.0.0.1`). It's
 because of this that only local users can connect to the server.
 Because we create the server socket and handle connections to it in
 the same program, the code handling the connections can trust that
-they are from local users. The first draft of 'usertcp' was written so
-that the server socket came from `tcpserver` or an equivalent
+they are from local users. The first draft of 'privatetcp' was written
+so that the server socket came from `tcpserver` or an equivalent
 superserver, and those are easy to configure such that the server is
 bound to external network interfaces accessible by remote users.
 Being able to trust that we're on loopback, we can omit a lot of
@@ -146,14 +147,14 @@ which we don't need).
 ## Make sure the UID is sane
 
 Back in the main process, we verify that the UID and GID we got are
-sane. 'usertcp' is designed to be used by people. Most Unix systems
+sane. 'privatetcp' is designed to be used by people. Most Unix systems
 are designed so that UIDs for people start at 500 or 1000 and go up a
 bit over 65000 (near the maximum value of 16-bit unsigned integers -
 the 'nobody' UID is usually thereabouts). The exact limits are defined
-differently for each OS in the 'usertcp' source code.  Sysadmins are
-free to disobey these limits but we don't accommodate that.
+differently for each OS in the 'privatetcp' source code.  Sysadmins
+are free to disobey these limits but we don't accommodate that.
 
-Notably, root (UID 0) cannot connect to a 'usertcp' server.
+Notably, root (UID 0) cannot connect to a 'privatetcp' server.
 
 If the UID isn't in the sane range, we may have done some useless work
 in the helper process to look up the corresponding GID before we got

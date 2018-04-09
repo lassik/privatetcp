@@ -1,4 +1,4 @@
-#define PROGNAME "usertcp"
+#define PROGNAME "privatetcp"
 #define MAX_BACKLOG 5
 #define MAX_CLIENTS 5
 #define MIN_CLIENT_UID 500

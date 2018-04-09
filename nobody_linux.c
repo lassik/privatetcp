@@ -6,13 +6,13 @@
 #include <errno.h>
 #include <stdio.h>
 
-#include "usertcp.h"
-#include "usertcp_config.h"
+#include "config.h"
+#include "privatetcp.h"
 
-extern FILE *usertcp_helper_proc_net_tcp;
+extern FILE *privatetcp_helper_proc_net_tcp;
 
 void
-usertcp_nobody_helper_client(struct usertcp_client *client)
+privatetcp_nobody_helper_client(struct privatetcp_client *client)
 {
 	static char buf[128];
 	long local_addr, remote_addr, uid, x;
@@ -20,7 +20,7 @@ usertcp_nobody_helper_client(struct usertcp_client *client)
 	int firstline, n;
 
 	firstline = 1;
-	while (fgets(buf, sizeof(buf) - 1, usertcp_helper_proc_net_tcp)) {
+	while (fgets(buf, sizeof(buf) - 1, privatetcp_helper_proc_net_tcp)) {
 		if (firstline) {
 			firstline = 0;
 			continue;
@@ -47,5 +47,5 @@ usertcp_nobody_helper_client(struct usertcp_client *client)
 		client->uid = uid;
 		break;
 	}
-	fseek(usertcp_helper_proc_net_tcp, 0, SEEK_SET);
+	fseek(privatetcp_helper_proc_net_tcp, 0, SEEK_SET);
 }
