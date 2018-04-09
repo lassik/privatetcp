@@ -106,7 +106,8 @@ incorrectly. It does call out to standard system libraries that read
 
 *privatetcp* puts some effort into sanitizing its process state,
 e.g. cleaning up file descriptors and environment variables, but you
-should start it from a process supervisor that cleans it up.
+should start *privatetcp* from a process supervisor that is explicitly
+designed to provide a known process state.
 
 TCP servers created by *privatetcp* are inaccessible and invisible to
 remote users because they are bound to the loopback interface
@@ -115,7 +116,8 @@ interface.
 
 To reduce the complexity of code running as root, IPv6 is not
 supported. TCP servers always bind to `127.0.0.1` and never to `::1`.
-DNS is not used but Unix user lookups under NIS/YP may invoke DNS.
+DNS is not used directly. Unix user lookups under NIS/YP may invoke
+DNS.
 
 EXAMPLES
 --------
