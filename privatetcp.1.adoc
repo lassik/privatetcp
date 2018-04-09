@@ -123,7 +123,7 @@ EXAMPLES
 --------
 
     # privatetcp finger
-    $ ln $(which date) ~/.privatetcp
+    $ ln -s $(which date) ~/.privatetcp
     $ nc -vv localhost 79
 
 SEE ALSO
