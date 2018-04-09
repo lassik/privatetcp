@@ -5,12 +5,12 @@ PRIVATETCP(1)
 NAME
 ----
 
-privatetcp - private TCP servers for local users on shared ports
+*privatetcp* - private TCP servers for local users on shared ports
 
 SYNOPSIS
 --------
 
-**privatetcp** *port* [*port* ...]
+*privatetcp* *port* [*port* ...]
 
 DESCRIPTION
 -----------
@@ -104,7 +104,7 @@ specify which ports to use. This makes it difficult to configure
 incorrectly. It does call out to standard system libraries that read
 `/etc/services`, `/etc/passwd` and possibly other files.
 
-privatetcp puts some effort into sanitizing its process state,
+*privatetcp* puts some effort into sanitizing its process state,
 e.g. cleaning up file descriptors and environment variables, but you
 should start it from a process supervisor that cleans it up.
 
