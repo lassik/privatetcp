@@ -21,6 +21,7 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 	static const char localip[] = "127.0.0.1";
 	static const char localhost[] = "localhost";
 	static const char *argv[2] = {".privatetcp", 0};
+	static struct stat st;
 	static char sportstr[8];
 	static char cportstr[8];
 	struct passwd *pw;
@@ -66,6 +67,18 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 	fprintf(stderr, "%s: client: user %lu(%s) group %lu on port %s(%s)\n",
 	    progname, (unsigned long)getuid(), pw->pw_name,
 	    (unsigned long)client->gid, sportstr, service);
+	if (stat(".", &st) == -1) {
+		diesys("client: cannot stat user home directory");
+	}
+	if (st.st_mode & 022) {
+		die("client: home directory is group or world writable");
+	}
+	if (stat(argv[0], &st) == -1) {
+		diesys("client: cannot stat user script");
+	}
+	if (st.st_mode & 022) {
+		die("client: user script is group or world writable");
+	}
 	execv(argv[0], (char *const *)argv);
 	diesys("client: exec");
 }
