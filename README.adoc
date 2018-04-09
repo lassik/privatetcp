@@ -1,13 +1,12 @@
 privatetcp
 ==========
 
-What does it do
----------------
-
 **privatetcp** is a TCP multiplexer that lets local users create their
 own TCP servers on convenient port numbers (such as the standard HTTP
 port 80). The same port number is shared by all users on the computer
-but each user controls the program that runs when they connect to it.
+but each user controls the program that runs when they personally
+connect to it.  For example, each user can have their own web server
+on port 80, isolated from other uers' web servers.
 
 **privatetcp** runs on Linux, MacOS, FreeBSD, NetBSD, OpenBSD and
 DragonFly BSD. It requires no configuration apart from the port
