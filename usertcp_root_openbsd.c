@@ -41,8 +41,5 @@ usertcp_root_server_client(struct usertcp_client *client)
 		warnsys("sysctl");
 		return;
 	}
-	if (tim.ruid == -1) {
-		return;
-	}
 	client->uid = tim.ruid;
 }
