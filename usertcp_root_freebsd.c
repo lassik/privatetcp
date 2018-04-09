@@ -21,8 +21,8 @@ usertcp_root_server_client(struct usertcp_client *client)
 {
 	static const char mib[] = "net.inet.tcp.getcred";
 	static struct sockaddr_in ss[2];
-	struct sockaddr_in *ssin = (struct sockaddr_in *)&ss[1];
-	struct sockaddr_in *csin = (struct sockaddr_in *)&ss[0];
+	struct sockaddr_in *ssin = &ss[1];
+	struct sockaddr_in *csin = &ss[0];
 	static struct xucred cr;
 	size_t crlen;
 
