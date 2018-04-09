@@ -1,0 +1,133 @@
+PRIVATETCP(1)
+=============
+:doctype: manpage
+
+NAME
+----
+
+privatetcp - private TCP servers for local users on shared ports
+
+SYNOPSIS
+--------
+
+**privatetcp** *port* [*port* ...]
+
+DESCRIPTION
+-----------
+
+*privatetcp* lets local users create their own TCP servers on
+convenient port numbers (such as the standard HTTP port 80). The same
+port number is shared by all users on the computer.  *privatetcp* runs
+as root and listens on the port, multiplexing it to provide different
+service to different TCP clients depending on which local user is at
+the other end of the connection. For example, each local user could
+point their web browser to `http://localhost` and see a completely
+different website, served by their own private web server that is
+isolated from other users' web servers.
+
+When *privatetcp* starts up, it creates a loopback TCP server on each
+*port* given on the command line. (Service names such as `http` are
+also accepted in place of port numbers.) It then accepts clients on
+those ports until it receives the SIGTERM signal that tells it to
+exit. For each client, *privatetcp* finds out which local user ID made
+the connection. It then asserts that the user ID is reasonable and
+that the user is allowed to login, switches to that user ID and group
+ID, changes to that user's home directory, sets *LOGNAME*, *USER*,
+*HOME*, *SHELL*, and *PATH*, and executes the file
+`~/.privatetcp`. The file must have execute permission (`chmod u+x
+~/.privatetcp`). It can be a binary executable, a shell script, or any
+other script with a valid shebang line (i.e. the first line of the
+file must start with `#!` and give the pathname of the interpreter to
+use).
+
+Upon successful execution of `~/.privatetcp` the standard error stream
+is closed so users' personal log messages don't clutter the
+system-wide log. The first thing `~/.privatetcp` should do is to
+re-open standard error to write into a log file, otherwise you may
+lose log messages.  Standard input and standard output are connected
+to the TCP client socket. This means you can simply read from standard
+input to read network traffic from the client, and write to standard
+output to write to the client. It's also possible to use Unix system
+calls like `fcntl` and `setsockopt` that operate on sockets.
+
+In addition to the standard environment variables listed above, the
+environment variable `PORT` is set to the port number of the server
+port and `SERVICE` is set to the equivalent service name in
+`/etc/services` (for example `PORT=80` corresponds to
+`SERVICE=http`). Environment variables specified by *UCSPI-TCP*
+(https://cr.yp.to/proto/ucspi-tcp.txt) are also set as follows:
+
+    PROTO=TCP
+    TCPLOCALIP=127.0.0.1
+    TCPLOCALHOST=localhost
+    TCPLOCALPORT=$PORT
+    TCPREMOTEIP=127.0.0.1
+    TCPREMOTEHOST=localhost
+    TCPREMOTEPORT=<client port>
+    TCPREMOTEINFO=$USER
+
+SYSTEM ADMINISTRATION
+---------------------
+
+The *privatetcp* multiplexer writes all error and log messages to
+standard error. It does not create log files, write to syslog or
+timestamp its own logs. It also does not put itself into the
+background or maintain a PID file. The system administrator is
+expected to set up supervision and logging according to local customs.
+
+SECURITY CONSIDERATIONS
+-----------------------
+
+*privatetcp* has been designed with great care to be as secure as
+feasible, paying particular attention to simplicity and privilege
+separation. However, it has not been audited by security experts. Do
+not run it on especially sensitive computers.
+
+The main process runs as root and accepts connections from local
+users. This means that a local user may be able to take over the
+entire computer if there is an exploitable security hole in the code.
+
+The main process spawns a helper process that runs under the
+unprivileged user account *nobody*. Complex operations are done in the
+helper process to minimize the impact of any security holes.
+
+Matching TCP client sockets to Unix user IDs is done by calling
+non-standard, undocumented kernel APIs that are different for each
+OS. They are possibly buggy or subject to change in new OS versions.
+*privatetcp* has some sanity checks to guard against such bugs but
+they are not infallible. Do not run *privatetcp* on computers where
+this makes you uneasy.
+
+*privatetcp* does not use any configuration files or environment
+variables. Its only configuration are the command line arguments that
+specify which ports to use. This makes it difficult to configure
+incorrectly. It does call out to standard system libraries that read
+`/etc/services`, `/etc/passwd` and possibly other files.
+
+privatetcp puts some effort into sanitizing its process state,
+e.g. cleaning up file descriptors and environment variables, but you
+should start it from a process supervisor that cleans it up.
+
+TCP servers created by *privatetcp* are inaccessible and invisible to
+remote users because they are bound to the loopback interface
+(i.e. localhost or 127.0.0.1) instead of an external network
+interface.
+
+To reduce the complexity of code running as root, IPv6 is not
+supported. TCP servers always bind to `127.0.0.1` and never to `::1`.
+DNS is not used but Unix user lookups under NIS/YP may invoke DNS.
+
+EXAMPLES
+--------
+
+    # privatetcp finger
+    $ ln $(which date) ~/.privatetcp
+    $ nc -vv localhost 79
+
+SEE ALSO
+--------
+
+* inetd(8), launchd(8), systemd(1)
+* tcpserver(1) from https://cr.yp.to/ucspi-tcp/tcpserver.html
+* Web servers: httpd(8), nginx(8)
+* For testing: curl(1), nc(1)
