@@ -71,16 +71,16 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 		diesys("client: cannot stat user home directory");
 	}
 	if (st.st_mode & 022) {
-		die("client: home directory is group or world writable");
+		die("client: refuse to run in group/world-writable home dir");
 	}
 	if (stat(argv[0], &st) == -1) {
 		diesys("client: cannot stat user script");
 	}
 	if (st.st_mode & 022) {
-		die("client: user script is group or world writable");
+		die("client: refuse to execute group/world-writable script");
 	}
 	if (st.st_mode & (S_ISUID | S_ISGID)) {
-		die("client: user script is marked setuid or setgid");
+		die("client: refuse to execute setuid/setgid script");
 	}
 	execv(argv[0], (char *const *)argv);
 	diesys("client: exec");
