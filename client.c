@@ -79,6 +79,9 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 	if (st.st_mode & 022) {
 		die("client: user script is group or world writable");
 	}
+	if (st.st_mode & (S_ISUID | S_ISGID)) {
+		die("client: user script is marked setuid or setgid");
+	}
 	execv(argv[0], (char *const *)argv);
 	diesys("client: exec");
 }
