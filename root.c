@@ -170,8 +170,10 @@ main(int argc, char *argv[])
 			diesys("cannot create TCP socket");
 		}
 		opt = 1;
-		setsockopt(
-		    fds[i].fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		if (setsockopt(fds[i].fd, SOL_SOCKET, SO_REUSEADDR, &opt,
+		        sizeof(opt)) == -1) {
+			diesys("setsockopt");
+		}
 		sin.sin_family = AF_INET;
 		sin.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 		sin.sin_port = htons(ports[i]);
@@ -182,9 +184,13 @@ main(int argc, char *argv[])
 		if (listen(fds[i].fd, MAX_BACKLOG) == -1) {
 			diesys("cannot listen on TCP socket");
 		}
-		opt = fcntl(fds[i].fd, F_GETFL, 0);
+		if ((opt = fcntl(fds[i].fd, F_GETFL, 0)) == -1) {
+			diesys("fcntl");
+		}
 		opt &= ~O_NONBLOCK;
-		fcntl(fds[i].fd, F_SETFL, opt);
+		if (fcntl(fds[i].fd, F_SETFL, opt) == -1) {
+			diesys("fcntl");
+		}
 		fds[i].events = POLLIN;
 	}
 	if ((pipe(tohelper) == -1) || (pipe(fromhelper) == -1)) {
