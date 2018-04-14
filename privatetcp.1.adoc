@@ -122,9 +122,14 @@ DNS.
 EXAMPLES
 --------
 
+As root:
+
     # privatetcp finger
-    $ ln -s $(which date) ~/.privatetcp
-    $ nc -vv localhost 79
+
+Then as a normal user:
+
+    $ ln -s /bin/date ~/.privatetcp
+    $ nc -v localhost 79 </dev/null
 
 SEE ALSO
 --------
