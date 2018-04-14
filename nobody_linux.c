@@ -15,7 +15,7 @@ void
 privatetcp_nobody_helper_client(struct privatetcp_client *client)
 {
 	static char buf[128];
-	long local_addr, remote_addr, uid, x;
+	unsigned long local_addr, remote_addr, uid, x;
 	unsigned int local_port, remote_port;
 	int firstline, n;
 
@@ -26,7 +26,7 @@ privatetcp_nobody_helper_client(struct privatetcp_client *client)
 			continue;
 		}
 		n = sscanf(buf,
-		    "%ld: %lX:%X %lX:%X %lX %lX:%lX %lX:%lX %lX %ld %ld %ld",
+		    "%lu: %lX:%X %lX:%X %lX %lX:%lX %lX:%lX %lX %lu %lu %lu",
 		    &x, &local_addr, &local_port, &remote_addr, &remote_port,
 		    &x, &x, &x, &x, &x, &x, &uid, &x, &x);
 		if (n < 12) {
