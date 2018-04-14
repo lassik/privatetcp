@@ -1,6 +1,8 @@
 privatetcp
 ==========
 
+image:https://travis-ci.org/lassik/privatetcp.svg?branch=master["Build Status", link="https://travis-ci.org/lassik/privatetcp"]
+
 **privatetcp** is a TCP multiplexer that lets local users create their
 own TCP servers on convenient port numbers (such as the standard HTTP
 port 80). The same port number is shared by all users on the computer
