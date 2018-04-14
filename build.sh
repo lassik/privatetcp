@@ -7,7 +7,7 @@ find "$builddir" -depth -mindepth 1 | xargs rm -rf --
 cd "$builddir"
 echo "Entering directory '$PWD'"
 export CC="${CC:-clang}"
-export CFLAGS="${CFLAGS:--Werror -Wall -Wextra -pedantic -std=c99 -g}"
+export CFLAGS="${CFLAGS:--Werror -Wall -Wextra -pedantic -std=c99 -g -D_BSD_SOURCE}"
 set -x
 cp -p ../config_"$uname".h config.h
 $CC $CFLAGS -I . -o privatetcp \
