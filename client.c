@@ -37,6 +37,9 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 	if (!pw) {
 		die("client: user not found");
 	}
+	fprintf(stderr, "%s: client: user %lu(%s) group %lu on port %s(%s)\n",
+	    progname, (unsigned long)getuid(), pw->pw_name,
+	    (unsigned long)client->gid, sportstr, service);
 	if (strstr(pw->pw_shell, "/nologin") ||
 	    strstr(pw->pw_shell, "/false")) {
 		die("client: user is not allowed to login");
@@ -64,9 +67,6 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 	    (setenv("TCPREMOTEINFO", pw->pw_name, 1) == -1)) {
 		diesys("client: cannot set environment");
 	}
-	fprintf(stderr, "%s: client: user %lu(%s) group %lu on port %s(%s)\n",
-	    progname, (unsigned long)getuid(), pw->pw_name,
-	    (unsigned long)client->gid, sportstr, service);
 	if (stat(".", &st) == -1) {
 		diesys("client: cannot stat user home directory");
 	}
@@ -74,6 +74,9 @@ privatetcp_client(struct privatetcp_client *client, const char *service)
 		die("client: refuse to run in group/world-writable home dir");
 	}
 	if (stat(argv[0], &st) == -1) {
+		if (errno == ENOENT) {
+			die("client: user does not have a script");
+		}
 		diesys("client: cannot stat user script");
 	}
 	if (st.st_mode & 022) {
