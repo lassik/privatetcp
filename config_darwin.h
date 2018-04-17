@@ -6,4 +6,4 @@
 #define NOBODY_UID 4294967294
 #define NOBODY_GID 4294967294
 #define NOBODY_DIR "/var/empty"
-#define CLIENT_PATH "/bin:/usr/bin"
+#define CLIENT_PATH "/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/sbin:/usr/local/bin"

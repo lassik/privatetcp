@@ -1,7 +1,7 @@
 #define PROGNAME "privatetcp"
 #define MAX_BACKLOG 5
 #define MAX_CLIENTS 5
-#define MIN_CLIENT_UID 500
+#define MIN_CLIENT_UID 1000
 #define MAX_CLIENT_UID 65533
 #define NOBODY_UID 65534
 #define NOBODY_GID 65534

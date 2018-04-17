@@ -1,9 +1,9 @@
 #define PROGNAME "privatetcp"
 #define MAX_BACKLOG 5
 #define MAX_CLIENTS 5
-#define MIN_CLIENT_UID 500
+#define MIN_CLIENT_UID 1000
 #define MAX_CLIENT_UID 65533
 #define NOBODY_UID 65534
 #define NOBODY_GID 65534
 #define NOBODY_DIR "/var/empty"
-#define CLIENT_PATH "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
+#define CLIENT_PATH "/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/pkg/bin:/usr/pkg/sbin"
