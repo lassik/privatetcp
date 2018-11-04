@@ -28,6 +28,7 @@ static char **services;
 static void
 sigterm(void)
 {
+	fprintf(stderr, "%s: exiting because SIGTERM received\n", progname);
 	if (helper) {
 		kill(helper, SIGTERM);
 		waitpid(helper, 0, WNOHANG);
